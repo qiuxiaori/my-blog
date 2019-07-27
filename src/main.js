@@ -5,10 +5,13 @@ import router from './router'
 import ElementUI from 'element-ui'
 import '../node_modules/element-ui/lib/theme-chalk/index.css'
 import App from './App.vue'
-
+import axios from 'axios'
+import VueAxios from 'vue-axios'
+import VueWangeditor from 'vue-wangeditor-simple'
+Vue.use(VueAxios, axios)
 Vue.use(ElementUI)
 Vue.config.productionTip = false
-
+Vue.use(VueWangeditor)
 /* eslint-disable no-new */
 new Vue({
   el: '#app',
