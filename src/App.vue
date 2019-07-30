@@ -30,12 +30,6 @@
                               command="addArticle">俺也写点东西
             </el-dropdown-item>
             <el-dropdown-item v-if="isLogin"
-                              command="getMine">看看咱写的
-            </el-dropdown-item>
-            <el-dropdown-item v-if="isLogin"
-                              command="getMyColl">偷偷收藏的
-            </el-dropdown-item>
-            <el-dropdown-item v-if="isLogin"
                               command="changeInfo">改下资料</el-dropdown-item>
             <el-dropdown-item command="logout"
                               v-if="isLogin"
@@ -48,15 +42,20 @@
       </div>
     </header>
 
-    <!-- <div class="breadcrumb container">
-      <el-breadcrumb separator="|"
-                     class="bread-main">
-        <el-breadcrumb-item class="checked"
-                            style="color:#ff6700">瞅瞅大家的</el-breadcrumb-item>
-        <el-breadcrumb-item class="">看看咱的</el-breadcrumb-item>
-        <el-breadcrumb-item>悄悄收藏的</el-breadcrumb-item>
-      </el-breadcrumb>
-    </div> -->
+    <div class='container'>
+      <el-select v-model="value"
+                 @change="chooseArticle"
+                 class="select"
+                 placeholder="请选择">
+        <el-option v-for="item in options"
+                   :key="item.value"
+                   :label="item.label"
+                   :disabled="item.disabled"
+                   :value="item.value">
+        </el-option>
+      </el-select>
+    </div>
+
     <div class='container'>
       <div class="asaid">
         <el-radio-group v-model="isCollapse"
@@ -64,21 +63,21 @@
           <el-radio-button :label="false">展开</el-radio-button>
           <el-radio-button :label="true">收起</el-radio-button>
         </el-radio-group>
-        <el-menu default-active="0"
+        <el-menu :default-active=defalultIndex
                  class="el-menu-vertical-demo"
                  @open="handleOpen"
+                 active-text-color="#ff6700"
                  @close="handleClose"
                  :collapse="isCollapse">
           <el-menu-item index="0"
-                        @click="getArticles()">
+                        @click="getArticlesAllSort()">
             <i class="el-icon-lollipop"></i>
             <span slot="title">全部</span>
           </el-menu-item>
           <el-menu-item index="1"
-                        @click="getArticlesBySort('日记')">
-            <i class="el-icon-tickets"></i>
-            <span slot="title"
-                  class="checked">日记</span>
+                        @click="getArticlesBySort('记事')">
+            <i class="el-icon-edit"></i>
+            <span slot="title">记事</span>
           </el-menu-item>
           <el-menu-item index="2"
                         @click="getArticlesBySort('书摘')">
@@ -90,11 +89,12 @@
             <i class="el-icon-video-camera"></i>
             <span slot="title">影评</span>
           </el-menu-item>
-          <!-- <el-menu-item index="4"
-                        @click="sortVisible = true">
-            <i class="el-icon-plus"></i>
-            <span slot="title">新增</span>
-          </el-menu-item> -->
+          <el-menu-item index="4"
+                        @click="getArticlesBySort('日记')">
+            <i class="el-icon-tickets"></i>
+            <span slot="title"
+                  class="checked">日记</span>
+          </el-menu-item>
         </el-menu>
       </div>
       <div class="article">
@@ -272,12 +272,14 @@
                       :label-width="formLabelWidth">
           <el-select v-model="addArtForm.sort"
                      placeholder="请选择要添加的分类">
-            <el-option label="日记"
-                       value="日记"></el-option>
+            <el-option label="记事"
+                       value="记事"></el-option>
             <el-option label="书摘"
                        value="书摘"></el-option>
             <el-option label="影评"
                        value="影评"></el-option>
+            <el-option label="日记"
+                       value="日记"></el-option>
           </el-select>
         </el-form-item>
       </el-form>
@@ -332,6 +334,7 @@ export default {
       url: 'http://127.0.0.1:7002/',
       isLogin: false,
       isCollapse: true,
+      defalultIndex: '0',
       tableData: [],
       articles: [],
       filterInfo: 0,
@@ -390,7 +393,23 @@ export default {
         // <pre class="className"><code class="className">hellow world</code></pre>
         'fullscreen' // 全屏
       ],
-      pasteFilterStyle: true // 打开/关闭粘贴样式的过滤
+      pasteFilterStyle: true, // 打开/关闭粘贴样式的过滤
+      options: [
+        {
+          value: 'all',
+          label: '看看大家的'
+        },
+        {
+          value: 'mine',
+          label: '咱自个儿的'
+        },
+        {
+          value: 'collection',
+          label: '偷偷收藏的',
+          disabled: true
+        }
+      ],
+      value: 'all'
 
     }
   },
@@ -412,9 +431,10 @@ export default {
           this.loginVisible = false
           this.isLogin = true
           this.userName = this.form.name
-          sessionStorage.setItem('userName', this.userName)
+          this.form.name = ''
         }
       })
+      this.getArticles()
     },
     register () {
       this.axios.post(this.url + 'user/register', {
@@ -438,24 +458,31 @@ export default {
           if (res.code === 0) {
             this.registerVisible = false
             this.isLogin = false
-            this.userName = ''
-            sessionStorage.clear()
+            this.userName = false
           }
         })
+      this.getArticles()
     },
     userMenu (command) {
       if (command === 'logout') {
         this.logout()
-      } if (command === 'login') {
+      } else if (command === 'login') {
         this.loginVisible = true
-      } if (command === 'addArticle') {
+      } else if (command === 'addArticle') {
         this.addArtVisible = true
-      } if (command === 'changeInfo') {
+      } else if (command === 'changeInfo') {
         this.infoVisible = true
-      } if (command === 'register') {
+      } else if (command === 'register') {
         this.registerVisible = true
-      } if (command === 'getMine') {
-        this.getMineArticles()
+      }
+    },
+    chooseArticle (value) {
+      if (value === 'all') {
+        this.getArticles()
+      } else if (value === 'mine') {
+        this.getMyArticles()
+      } else if (value === 'collection') {
+        this.getLoveArticles()
       }
     },
     addArticle () {
@@ -470,12 +497,15 @@ export default {
         if (res.code === 0) {
           this.addArtVisible = false
           this.content1 = ''
+          this.getArticles()
+          this.addArtForm.title = ''
+          this.content1 = ''
+          this.addArtForm.sort = ''
+          if (this.curSort) {
+            this.tableData = this.getArticlesBySort(this.sort)
+          }
         }
       })
-      this.tableData = this.articles = this.getArticles()
-      if (this.curSort) {
-        this.tableData = this.getArticlesBySort(this.sort)
-      }
     },
     getArticle (index, tableData) {
       this.curBody = tableData[index].body
@@ -483,16 +513,65 @@ export default {
       this.artVisible = true
     },
     getArticles () {
+      this.isMine = false
+      this.isLike = false
+      this.value = 'all'
+      this.defalultIndex = '0'
       this.axios.get(this.url + 'article/getArticles')
         .then(response => {
           this.articles = this.tableData = JSON.parse(JSON.stringify(response.data.data))
         })
     },
-    getMineArticles () {
-      this.isMine = true
-      this.isLike = false
+    getMyArticles () {
+      this.tableData = []
+      console.log('this.tableData' + this.tableData)
+      console.log('this.curSort' + this.curSort)
+      console.log('this.userName' + this.userName)
+      console.log('this.value' + this.value)
+      console.log('this.defalultIndex' + this.defalultIndex)
       if (this.curSort) {
-        this.tableData = []
+        this.articles.map(e => {
+          console.log(e)
+          if (e.sort === this.curSort && e.userName === this.userName) {
+            this.tableData.push(e)
+          }
+        })
+      } else {
+        this.articles.map(e => {
+          console.log('cesih' + e)
+          if (e.userName === this.userName) {
+            this.tableData.push(e)
+          }
+        })
+      }
+    },
+    getLoveArticles () {
+      this.isMine = false
+      this.isLike = true
+      this.tableData = []
+      if (this.curSort) {
+        this.articles.map(e => {
+          if (e.sort === this.curSort && e.nice) {
+            this.tableData.push(e)
+          }
+        })
+      }
+      this.articles.map(e => {
+        if (e.true) {
+          this.tableData.push(e)
+        }
+      })
+    },
+    getArticlesBySort (sort) {
+      this.curSort = sort
+      this.tableData = []
+      if (this.value === 'all') {
+        this.articles.map(e => {
+          if (e.sort === this.curSort) {
+            this.tableData.push(e)
+          }
+        })
+      } else if (this.value === 'mine') {
         this.articles.map(e => {
           if (e.sort === this.curSort && e.userName === this.userName) {
             this.tableData.push(e)
@@ -500,22 +579,33 @@ export default {
         })
       }
     },
-    getArticlesBySort (sort) {
-      this.curSort = sort
+    getArticlesAllSort () {
+      this.curSort = false
       this.tableData = []
-      this.articles.map(e => {
-        if (e.sort === this.curSort) {
-          this.tableData.push(e)
-        }
-      })
+      if (this.value === 'all') {
+        this.tableData = this.articles
+      } else if (this.value === 'mine') {
+        this.articles.map(e => {
+          console.log(this.userName)
+          if (e.userName === this.userName) {
+            this.tableData.push(e)
+          }
+        })
+      }
     },
     delArticle (index, tableData) {
       this.axios.post(this.url + 'article/delArticle', {
         _id: tableData[index]._id
       }).then(response => {
-        alert()
         const res = JSON.parse(JSON.stringify(response.data))
-        console.log(res)
+        this.$message(res.msg)
+        if (res.code === 0) {
+          this.getArticles()
+        }
+        if (this.curSort) {
+          this.getArticlesBySort(this.curSort)
+        }
+        this.getArticlesAllSort()
       })
     },
     addSort () {
@@ -542,15 +632,9 @@ export default {
     }
   },
   watch: {
-    sort: function () {
-      console.log(this.tableData)
-    }
   },
   mounted () {
     this.getArticles()
-    this.userName = sessionStorage.getItem('userName')
-    // eslint-disable-next-line no-unneeded-ternary
-    this.isLogin = this.userName ? true : false
   }
 }
 </script>
@@ -696,5 +780,10 @@ footer {
 }
 .wangeditor {
   margin-left: 100px;
+}
+.select {
+  float: right;
+  margin-right: 30px;
+  margin-top: 10px;
 }
 </style>
