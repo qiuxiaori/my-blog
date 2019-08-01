@@ -1,5 +1,4 @@
-/* eslint-disable no-unneeded-ternary */
-/* eslint-disable no-unused-expressions */
+
 <template>
   <div id="app">
     <header class="header">
@@ -100,7 +99,9 @@
       <div class="article">
         <el-table :data="tableData"
                   max-height="480"
-                  style="width: 100%">
+                  style="
+                  width:
+                  100%">
           <el-table-column type="index"
                            label="序号"
                            min-width="5px"
@@ -178,6 +179,7 @@
         <el-form-item label="密码"
                       :label-width="formLabelWidth">
           <el-input v-model="form.userPwd"
+                    type="password"
                     autocomplete="off"></el-input>
         </el-form-item>
       </el-form>
@@ -242,25 +244,32 @@
     <!-- 文章详情对话框 -->
     <el-dialog class="article-dialog"
                :visible.sync="artVisible"
-               top="40px"
-               width="68%">
+               top="20px"
+               width="85%">
       <div class="art-title">{{curTitle}}</div>
       <div class="art-container">
-        <span v-html="curBody"></span>
+        <mavon-editor v-model="curBody"
+                      :subfield="isEdit"
+                      :defaultOpen="'preview'"
+                      :toolbarsFlag="isEdit"
+                      :editable="isEdit"
+                      :scrollStyle="true"
+                      min-height="600px"
+                      :ishljs="true"></mavon-editor>
       </div>
       <div slot="footer"
-           v-if="isMine"
            class="dialog-footer">
-        <el-button @click="artVisible = false">cancle</el-button>
+        <el-button @click="isEdit = !isEdit" :disabled="!isMine">edit</el-button>
         <el-button type="primary"
-                   @click="delArticle">commit</el-button>
+                   @click="updateArticle()"
+                   :disabled="!isMine">commit</el-button>
       </div>
     </el-dialog>
     <!-- 添加文章对话框 -->
     <el-dialog class="addArtDialog"
                :visible.sync="addArtVisible"
                top="20px"
-               width="70%">
+               width="82%">
       <el-form :model="addArtForm">
         <el-form-item label="标题"
                       class='addArtTitle'
@@ -283,12 +292,8 @@
           </el-select>
         </el-form-item>
       </el-form>
-      <div class="editor_wrap">
-        <vue-wangeditor id="editor1"
-                        class="wangeditor"
-                        :options="options1"
-                        v-model="content1"
-                        @get-text="getText"></vue-wangeditor>
+      <div class="editor">
+        <mavon-editor v-model="content1" />
       </div>
       <div slot="footer"
            class="dialog-footer">
@@ -307,6 +312,7 @@
                       class="infoInput"
                       :label-width="formLabelWidth">
           <el-input v-model="infoForm.userName"
+          :placeholder="userName"
                     autocomplete="off"></el-input>
         </el-form-item>
         <el-form-item label="密码"
@@ -320,18 +326,22 @@
            class="dialog-footer">
         <el-button @click="infoVisible = false">cancle</el-button>
         <el-button type="primary"
-                   @click="changeInfo">commit</el-button>
+                   @click="updateInfo">commit</el-button>
       </div>
     </el-dialog>
   </div>
 </template>
 
 <script>
+
+import 'mavon-editor/dist/css/index.css'
 export default {
   name: 'app',
   data () {
     return {
       url: 'http://127.0.0.1:7002/',
+      isEdit: false,
+      mavonText: '',
       isLogin: false,
       isCollapse: true,
       defalultIndex: '0',
@@ -348,6 +358,7 @@ export default {
       curSort: '',
       curBody: '',
       curTitle: '',
+      curIndex: '-1',
       isMine: false,
       isLike: false,
       form: {
@@ -372,28 +383,11 @@ export default {
       },
       formLabelWidth: '100px',
       circleUrl: 'https://cube.elemecdn.com/3/7c/3ea6beec64369c2642b92c6726f1epng.png',
-      initContent: '<p>要初始化的内容</p>',
       content1: '', // 包含html标签
-      text1: '', // 不含html标签，纯文本
       options1: {
         width: '800px',
         height: '400px'
       },
-      menus: [
-        'head', // 标题
-        'bold', // 粗体
-        'italic', // 斜体
-        'underline', // 下划线
-        'redo', // 重复
-        /* ---- 新增 ---- */
-        'clearStyle', // 清除文字的样式
-        'clearFormat', // 清除文字的格式
-        'clearAll', // 一键清空编辑器
-        'insertCode', // 插入带类名的代码
-        // <pre class="className"><code class="className">hellow world</code></pre>
-        'fullscreen' // 全屏
-      ],
-      pasteFilterStyle: true, // 打开/关闭粘贴样式的过滤
       options: [
         {
           value: 'all',
@@ -409,6 +403,14 @@ export default {
           disabled: true
         }
       ],
+      toolBars: {
+        subfield: 'false',
+        defaultOpen: 'preview',
+        toolbarsFlag: 'false',
+        editable: 'false',
+        scrollStyle: 'true',
+        ishljs: 'true'
+      },
       value: 'all'
 
     }
@@ -431,7 +433,9 @@ export default {
           this.loginVisible = false
           this.isLogin = true
           this.userName = this.form.name
+          sessionStorage.setItem('userName', this.userName)
           this.form.name = ''
+          this.form.userPwd = ''
         }
       })
       this.getArticles()
@@ -459,6 +463,8 @@ export default {
             this.registerVisible = false
             this.isLogin = false
             this.userName = false
+            console.log(sessionStorage.getItem('userName'))
+            sessionStorage.setItem('userName', '')
           }
         })
       this.getArticles()
@@ -478,8 +484,10 @@ export default {
     },
     chooseArticle (value) {
       if (value === 'all') {
-        this.getArticles()
+        this.getArticlesAllPeople()
       } else if (value === 'mine') {
+        this.isMine = true
+        this.isLike = false
         this.getMyArticles()
       } else if (value === 'collection') {
         this.getLoveArticles()
@@ -508,9 +516,20 @@ export default {
       })
     },
     getArticle (index, tableData) {
-      this.curBody = tableData[index].body
       this.curTitle = tableData[index].title
+      this.curIndex = index
+      this.axios.get(this.url + 'article/getArticle', {
+        params: {
+          title: this.curTitle
+        }
+      }).then(response => {
+        const res = JSON.parse(JSON.stringify(response.data))
+        if (res.code === 0) {
+          this.curBody = res.data.body
+        }
+      })
       this.artVisible = true
+      this.isEdit = false
     },
     getArticles () {
       this.isMine = false
@@ -522,23 +541,30 @@ export default {
           this.articles = this.tableData = JSON.parse(JSON.stringify(response.data.data))
         })
     },
-    getMyArticles () {
+    getArticlesAllPeople () {
+      this.isMine = false
+      this.isLike = false
       this.tableData = []
-      console.log('this.tableData' + this.tableData)
-      console.log('this.curSort' + this.curSort)
-      console.log('this.userName' + this.userName)
-      console.log('this.value' + this.value)
-      console.log('this.defalultIndex' + this.defalultIndex)
       if (this.curSort) {
         this.articles.map(e => {
-          console.log(e)
+          if (e.sort === this.curSort) {
+            this.tableData.push(e)
+          }
+        })
+      } else {
+        this.tableData = this.articles
+      }
+    },
+    getMyArticles () {
+      this.tableData = []
+      if (this.curSort) {
+        this.articles.map(e => {
           if (e.sort === this.curSort && e.userName === this.userName) {
             this.tableData.push(e)
           }
         })
       } else {
         this.articles.map(e => {
-          console.log('cesih' + e)
           if (e.userName === this.userName) {
             this.tableData.push(e)
           }
@@ -586,7 +612,6 @@ export default {
         this.tableData = this.articles
       } else if (this.value === 'mine') {
         this.articles.map(e => {
-          console.log(this.userName)
           if (e.userName === this.userName) {
             this.tableData.push(e)
           }
@@ -600,12 +625,24 @@ export default {
         const res = JSON.parse(JSON.stringify(response.data))
         this.$message(res.msg)
         if (res.code === 0) {
-          this.getArticles()
+          this.tableData.splice(index, 1)
         }
-        if (this.curSort) {
-          this.getArticlesBySort(this.curSort)
+      })
+    },
+    updateArticle () {
+      this.axios.post(this.url + 'article/updateArticle', {
+        body: this.curBody,
+        title: this.curTitle
+      }).then(response => {
+        const res = JSON.parse(JSON.stringify(response.data))
+        if (res.code === 0) {
+          this.artVisible = false
+          this.$message(res.msg)
+          this.isEdit = false
+          this.curBody = this.curBody
+          return
         }
-        this.getArticlesAllSort()
+        this.$message('fail')
       })
     },
     addSort () {
@@ -624,8 +661,24 @@ export default {
         }
       })
     },
-    changeInfo () {
-
+    updateInfo () {
+      const newName = this.infoForm.userName
+      const userPwd = this.infoForm.userPwd
+      if (!newName && !userPwd) return
+      this.axios.post(this.url + 'user/updateUser', {
+        newName,
+        userName: this.userName,
+        userPwd
+      }).then(response => {
+        const res = JSON.parse(JSON.stringify(response.data))
+        console.log(res)
+        if (res.code === 0) {
+          this.infoVisible = false
+        }
+        this.infoForm.userName = ''
+        this.infoForm.userPwd = ''
+        this.$message(res.msg)
+      })
     },
     indexMethod (index) {
       return index + 1
@@ -635,155 +688,13 @@ export default {
   },
   mounted () {
     this.getArticles()
+    if (sessionStorage.getItem('userName') !== '') {
+      this.userName = sessionStorage.getItem('userName')
+      this.isLogin = true
+    }
   }
 }
 </script>
 
 <style>
-.bread-main .checked .el-breadcrumb__inner,
-.bread-main .checked .el-breadcrumb__item:last-child .el-breadcrumb__inner {
-  color: #ff6700;
-}
-.el-breadcrumb__inner:hover,
-.el-breadcrumb__item:last-child .el-breadcrumb__inner:hover {
-  color: #f58439;
-  cursor: pointer;
-}
-body {
-  margin: 0px;
-  padding: 0px;
-  font-family: "STHeiti Light", "微软雅黑", "SimSun", STXihei, "华文细黑", serif;
-
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
-}
-
-#header-con {
-  border-bottom: 1px solid #dcdfe6;
-  height: 80px;
-}
-
-header {
-  line-height: 80px;
-  font-weight: 200px;
-  font-size: 26px;
-}
-/* .el-radio-group {
-  width: 150px;
-} */
-.page-name {
-  line-height: 90px;
-  margin-left: 30px;
-  display: inline;
-}
-.user {
-  font-size: 18px;
-  font-weight: 600;
-  color: #ff6700;
-  line-height: 20px;
-}
-.user-space {
-  position: relative;
-  height: 50px;
-  margin-top: 20px;
-  margin-right: 40px;
-  display: inline-block;
-  float: right;
-}
-
-.bread-main {
-  height: 40px;
-  line-height: 40px;
-  padding-left: 750px;
-  font-size: 16px;
-}
-
-.container {
-  width: 1100px;
-  margin: 0 auto;
-  position: relative;
-}
-
-.el-radio-group {
-  padding-top: 10px;
-  width: 200px;
-}
-
-.el-menu-vertical-demo:not(.el-menu--collapse) {
-  width: 200px;
-  min-height: 400px;
-}
-.demo-table-expand {
-  font-size: 0;
-}
-.demo-table-expand label {
-  width: 90px;
-  color: #99a9bf;
-}
-.demo-table-expand .el-form-item {
-  margin-right: 0;
-  margin-bottom: 0;
-  width: 50%;
-}
-.asaid {
-  display: inline-block;
-  position: absolute;
-  top: 5px;
-  left: 15px;
-}
-.article {
-  display: inline-block;
-  width: 820px;
-  position: absolute;
-  top: 50px;
-  right: 20px;
-}
-footer {
-  position: absolute;
-  bottom: 80px;
-  margin: 0 auto;
-  right: 220px;
-}
-.foot-desc li {
-  float: left;
-  margin-right: 10px;
-  color: #5f6164;
-  list-style: none;
-}
-.art-title {
-  margin: 0 auto;
-  width: 90%;
-  margin-bottom: 20px;
-  height: 20px;
-  font-weight: 700px;
-  font-size: 24px;
-}
-.art-container {
-  margin: 0 auto;
-  width: 87%;
-  padding: 10px 15px 0px 15px;
-  height: 90%;
-  border: #dcdfe6 solid 0.5px;
-  border-radius: 3px;
-}
-.infoInput .el-input {
-  width: 250px;
-}
-.article-dialog .el-dialog__body {
-  height: 520px;
-}
-.addArtDialog .el-dialog__body {
-  height: 530px;
-}
-.addArtTitle .el-input {
-  width: 500px;
-}
-.wangeditor {
-  margin-left: 100px;
-}
-.select {
-  float: right;
-  margin-right: 30px;
-  margin-top: 10px;
-}
 </style>

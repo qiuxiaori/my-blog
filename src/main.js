@@ -8,6 +8,10 @@ import App from './App.vue'
 import axios from 'axios'
 import VueAxios from 'vue-axios'
 import VueWangeditor from 'vue-wangeditor-simple'
+import mavonEditor from 'mavon-editor'
+import 'mavon-editor/dist/css/index.css'
+import '../static/index.css'
+Vue.use(mavonEditor)
 Vue.use(VueAxios, axios)
 Vue.use(ElementUI)
 Vue.config.productionTip = false
