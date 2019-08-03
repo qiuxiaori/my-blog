@@ -143,9 +143,9 @@
               <el-button size="mini"
                          v-if="!isLike&&!isMine"
                          type="success"
-                         @click="likeArticle(scope.$index,tableData)"
+                         @click="changeLikeArt(scope.$index,tableData)"
                          icon="el-icon-star-off"
-                         plain></el-button>
+                         :plain="!scope.row.nice"></el-button>
             </template>
           </el-table-column>
         </el-table>
@@ -259,7 +259,8 @@
       </div>
       <div slot="footer"
            class="dialog-footer">
-        <el-button @click="isEdit = !isEdit" :disabled="!isMine">edit</el-button>
+        <el-button @click="isEdit = !isEdit"
+                   :disabled="!isMine">edit</el-button>
         <el-button type="primary"
                    @click="updateArticle()"
                    :disabled="!isMine">commit</el-button>
@@ -312,7 +313,7 @@
                       class="infoInput"
                       :label-width="formLabelWidth">
           <el-input v-model="infoForm.userName"
-          :placeholder="userName"
+                    :placeholder="userName"
                     autocomplete="off"></el-input>
         </el-form-item>
         <el-form-item label="密码"
@@ -339,7 +340,7 @@ export default {
   name: 'app',
   data () {
     return {
-      url: 'http://127.0.0.1:7002/',
+      url: 'http://127.0.0.1:7001/',
       isEdit: false,
       mavonText: '',
       isLogin: false,
@@ -416,6 +417,9 @@ export default {
     }
   },
   methods: {
+    filterTag (value, row) {
+      return row.nice === value
+    },
     handleOpen (key, keyPath) {
       console.log(key, keyPath)
     },
@@ -430,6 +434,7 @@ export default {
         const res = JSON.parse(JSON.stringify(response.data))
         this.$message(res.msg)
         if (res.code === 0) {
+          console.log(this.$cookie.get('test'))
           this.loginVisible = false
           this.isLogin = true
           this.userName = this.form.name
@@ -451,6 +456,7 @@ export default {
         this.$message(res.msg)
         if (res.code === 0) {
           this.registerVisible = false
+          this.registerForm = {}
         }
       })
     },
@@ -463,8 +469,7 @@ export default {
             this.registerVisible = false
             this.isLogin = false
             this.userName = false
-            console.log(sessionStorage.getItem('userName'))
-            sessionStorage.setItem('userName', '')
+            sessionStorage.clear()
           }
         })
       this.getArticles()
@@ -618,6 +623,18 @@ export default {
         })
       }
     },
+    changeLikeArt (index, data) {
+      console.log(data[index])
+      data[index].nice = !data[index].nice
+      // this.axios.post(this.url + 'article/changeLikeArt', {
+      //   userName: this.userName,
+      //   artId: data[index]._id
+      // }).then(response => {
+      //   const res = JSON.parse(JSON.stringify(response))
+      //   if (res === 0) {
+      //   }
+      // })
+    },
     delArticle (index, tableData) {
       this.axios.post(this.url + 'article/delArticle', {
         _id: tableData[index]._id
@@ -671,9 +688,10 @@ export default {
         userPwd
       }).then(response => {
         const res = JSON.parse(JSON.stringify(response.data))
-        console.log(res)
         if (res.code === 0) {
           this.infoVisible = false
+          this.userName = newName
+          sessionStorage.setItem('userName', newName)
         }
         this.infoForm.userName = ''
         this.infoForm.userPwd = ''
@@ -688,7 +706,7 @@ export default {
   },
   mounted () {
     this.getArticles()
-    if (sessionStorage.getItem('userName') !== '') {
+    if (sessionStorage.getItem('userName')) {
       this.userName = sessionStorage.getItem('userName')
       this.isLogin = true
     }
