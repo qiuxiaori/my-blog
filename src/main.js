@@ -17,8 +17,8 @@ Vue.use(VueAxios, axios)
 Vue.use(ElementUI)
 Vue.use(VueCookies)
 axios.default.withCredentials = true
-Vue.prototype.$axios = axios
-/* eslint-disable no-new */
+Vue.prototype.$axios = VueAxios
+// eslint-disable-next-line no-new
 new Vue({
   el: '#app',
   router,
