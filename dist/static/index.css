@@ -1,0 +1,171 @@
+.bread-main .checked .el-breadcrumb__inner,
+.bread-main .checked .el-breadcrumb__item:last-child .el-breadcrumb__inner {
+  color: #ff6700;
+}
+
+.el-breadcrumb__inner:hover,
+.el-breadcrumb__item:last-child .el-breadcrumb__inner:hover {
+  color: #f58439;
+  cursor: pointer;
+}
+
+body {
+  margin: 0px;
+  padding: 0px;
+  font-family: "STHeiti Light", "微软雅黑", "SimSun", STXihei, "华文细黑", serif;
+
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+#header-con {
+  border-bottom: 1px solid #dcdfe6;
+  height: 80px;
+}
+
+header {
+  line-height: 80px;
+  font-weight: 200px;
+  font-size: 26px;
+}
+
+/* .el-radio-group {
+  width: 150px;
+} */
+.page-name {
+  line-height: 90px;
+  margin-left: 30px;
+  display: inline;
+}
+
+.user {
+  font-size: 18px;
+  font-weight: 600;
+  color: #ff6700;
+  line-height: 20px;
+}
+
+.user-space {
+  position: relative;
+  height: 50px;
+  margin-top: 20px;
+  margin-right: 40px;
+  display: inline-block;
+  float: right;
+}
+
+.bread-main {
+  height: 40px;
+  line-height: 40px;
+  padding-left: 750px;
+  font-size: 16px;
+}
+
+.container {
+  width: 1100px;
+  margin: 0 auto;
+  position: relative;
+}
+
+.el-radio-group {
+  padding-top: 10px;
+  width: 200px;
+}
+
+.el-menu-vertical-demo:not(.el-menu--collapse) {
+  width: 200px;
+  min-height: 400px;
+}
+
+.demo-table-expand {
+  font-size: 0;
+}
+
+.demo-table-expand label {
+  width: 90px;
+  color: #99a9bf;
+}
+
+.demo-table-expand .el-form-item {
+  margin-right: 0;
+  margin-bottom: 0;
+  width: 50%;
+}
+
+.asaid {
+  display: inline-block;
+  position: absolute;
+  top: 5px;
+  left: 15px;
+}
+
+.article {
+  display: inline-block;
+  width: 820px;
+  position: absolute;
+  top: 50px;
+  right: 20px;
+}
+
+footer {
+  position: absolute;
+  bottom: 80px;
+  margin: 0 auto;
+  right: 220px;
+}
+
+.foot-desc li {
+  float: left;
+  margin-right: 10px;
+  color: #5f6164;
+  list-style: none;
+}
+.infoInput .el-input {
+  width: 250px;
+}
+/* 文章详情样式 */
+.art-title {
+  margin: 0 auto;
+  width: 90%;
+  padding-left: 56px;
+  margin-bottom: 20px;
+  height: 20px;
+  font-weight: 800px;
+  font-size: 26px;
+}
+.art-container {
+  padding-top: 30px;
+}
+.art-container .v-note-wrapper{
+  margin: 0 auto;
+  width:1000px;
+  padding: 8px 12px 0px 12px;
+  height: 450px;
+}
+
+.article-dialog .el-dialog__body {
+  height: 550px;
+}
+/* 编辑，添加文章对话框样式 */
+.addArtDialog .el-dialog__body {
+  height: 550px;
+}
+.addArtTitle .el-input {
+  width: 600px;
+}
+.addArtDialog .editor {
+  width:1000px;
+  margin:0 auto;
+}
+.addArtDialog .v-note-wrapper {
+  height: 450px;
+  padding-left:5px;
+}
+.select {
+  float: right;
+  margin-right: 30px;
+  margin-top: 10px;
+}
+.hidden {
+  visibility: hidden;
+}
