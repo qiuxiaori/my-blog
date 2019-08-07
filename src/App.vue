@@ -340,7 +340,7 @@ export default {
   name: 'app',
   data () {
     return {
-      url: 'http://127.0.0.1:7001/',
+      url: 'http://172.17.65.54:7001/',
       isEdit: false,
       mavonText: '',
       isLogin: false,
@@ -537,9 +537,9 @@ export default {
       this.isEdit = false
     },
     getArticles () {
-      this.axios.get(this.url + 'article/getArticles', {params: {
-        userName: sessionStorage.getItem('userName')
-      }
+      this.axios.get(this.url + 'article/getArticles', {        params: {
+          userName: sessionStorage.getItem('userName')
+        }
       }).then(response => {
         this.articles = this.tableData = JSON.parse(JSON.stringify(response.data.data))
       })
