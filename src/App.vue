@@ -145,7 +145,7 @@
                          type="success"
                          @click="changeLikeArt(scope.$index,tableData)"
                          icon="el-icon-star-off"
-                         :plain="!scope.row.nice"></el-button>
+                         :plain="!scope.row.isLike"></el-button>
             </template>
           </el-table-column>
         </el-table>
@@ -537,16 +537,15 @@ export default {
       this.isEdit = false
     },
     getArticles () {
-      this.isMine = false
-      this.isLike = false
-      this.value = 'all'
-      this.defalultIndex = '0'
-      this.axios.get(this.url + 'article/getArticles')
-        .then(response => {
-          this.articles = this.tableData = JSON.parse(JSON.stringify(response.data.data))
-        })
+      this.axios.get(this.url + 'article/getArticles', {params: {
+        userName: sessionStorage.getItem('userName')
+      }
+      }).then(response => {
+        this.articles = this.tableData = JSON.parse(JSON.stringify(response.data.data))
+      })
     },
     getArticlesAllPeople () {
+      this.getArticles()
       this.isMine = false
       this.isLike = false
       this.tableData = []
@@ -561,6 +560,7 @@ export default {
       }
     },
     getMyArticles () {
+      this.getArticles()
       this.tableData = []
       if (this.curSort) {
         this.articles.map(e => {
@@ -577,6 +577,7 @@ export default {
       }
     },
     getLoveArticles () {
+      this.getArticles()
       this.isMine = false
       this.isLike = true
       this.tableData = []
@@ -611,6 +612,7 @@ export default {
       }
     },
     getArticlesAllSort () {
+      this.getArticles()
       this.curSort = false
       this.tableData = []
       if (this.value === 'all') {
@@ -624,16 +626,16 @@ export default {
       }
     },
     changeLikeArt (index, data) {
-      console.log(data[index])
-      data[index].nice = !data[index].nice
-      // this.axios.post(this.url + 'article/changeLikeArt', {
-      //   userName: this.userName,
-      //   artId: data[index]._id
-      // }).then(response => {
-      //   const res = JSON.parse(JSON.stringify(response))
-      //   if (res === 0) {
-      //   }
-      // })
+      this.axios.post(this.url + 'article/changeLikeArt', {
+        userName: this.userName,
+        artId: data[index]._id
+      }).then(response => {
+        const res = JSON.parse(JSON.stringify(response.data))
+        console.log(res.code)
+        if (res.code === 0) {
+          data[index].isLike = !data[index].isLike
+        }
+      })
     },
     delArticle (index, tableData) {
       this.axios.post(this.url + 'article/delArticle', {
@@ -692,6 +694,8 @@ export default {
           this.infoVisible = false
           this.userName = newName
           sessionStorage.setItem('userName', newName)
+          this.curSort = ''
+          this.getArticlesAllPeople()
         }
         this.infoForm.userName = ''
         this.infoForm.userPwd = ''
@@ -706,6 +710,7 @@ export default {
   },
   mounted () {
     this.getArticles()
+    // sessionStorage.setItem('userName', '')
     if (sessionStorage.getItem('userName')) {
       this.userName = sessionStorage.getItem('userName')
       this.isLogin = true
