@@ -340,7 +340,7 @@ export default {
   name: 'app',
   data () {
     return {
-      url: 'http://172.17.65.54:7001/',
+      url: 'http://127.0.0.1:7001/',
       isEdit: false,
       mavonText: '',
       isLogin: false,
